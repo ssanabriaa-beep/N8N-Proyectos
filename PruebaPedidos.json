@@ -1,0 +1,155 @@
+{
+  "name": "PruebaPedidos",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "pedido",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "63ff6567-a18e-44a9-83e8-3318ac3581d8",
+      "name": "Webhook",
+      "webhookId": "58a8ab5e-c570-47ad-8f8e-b32bbe11c942"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Nodo Code de n8n -> Language: JavaScript, Mode: \"Run Once for All Items\"\n// Entrada: salida del nodo Webhook (POST /pedido). Salida: 1 item con\n//   válido   -> { valido: true,  status: 202, pedido_id, pedido }\n//   inválido -> { valido: false, status: 400, errores: { \"campo\": [\"msg\", ...] } }\n\nconst VENTANA_MIN = 1;          // ventana de tiempo para el pedido_id (ver nota abajo)\nconst MAX_CANTIDAD = 100;\nconst PAGOS = ['efectivo', 'nequi', 'datafono'];\n\n// ---------- utilidades ----------\nconst errores = {};\nconst err = (campo, msg) => { (errores[campo] ??= []).push(msg); };\nconst esTexto = (v) => typeof v === 'string' && v.trim().length > 0;\nconst limpio = (v) => String(v).trim().replace(/\\s+/g, ' ');\nconst esObjeto = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);\n\n// Celular colombiano -> 57XXXXXXXXXX (acepta \"300 123 4567\", \"+57-300-1234567\", \"0057 300...\")\nfunction normalizarTelefono(raw) {\n  let d = String(raw).replace(/\\D/g, '');\n  if (d.startsWith('00')) d = d.slice(2);\n  if (/^3\\d{9}$/.test(d)) d = '57' + d;\n  return /^573\\d{9}$/.test(d) ? d : null;\n}\n\n// Hash determinista de 53 bits (cyrb53), sin dependencias.\n// Para algo criptográfico usa require('crypto') (requiere NODE_FUNCTION_ALLOW_BUILTIN=crypto en n8n).\nfunction hash53(str, seed = 0) {\n  let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;\n  for (let i = 0; i < str.length; i++) {\n    const ch = str.charCodeAt(i);\n    h1 = Math.imul(h1 ^ ch, 2654435761);\n    h2 = Math.imul(h2 ^ ch, 1597334677);\n  }\n  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);\n  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);\n  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16).padStart(14, '0');\n}\n\n// ---------- entrada ----------\nconst entrada = $input.first().json;\nconst b = entrada.body ?? entrada;   // el Webhook entrega el JSON en .body\n\nif (!esObjeto(b)) {\n  err('body', 'debe ser un objeto JSON');\n  return [{ json: { valido: false, status: 400, errores } }];\n}\n\n// ---------- validación ----------\n// cliente\nlet nombre = null, telefono = null;\nif (!esObjeto(b.cliente)) {\n  err('cliente', 'obligatorio y debe ser un objeto');\n} else {\n  if (!esTexto(b.cliente.nombre)) err('cliente.nombre', 'obligatorio (texto no vacío)');\n  else if (limpio(b.cliente.nombre).length > 80) err('cliente.nombre', 'máximo 80 caracteres');\n  else nombre = limpio(b.cliente.nombre);\n\n  if (typeof b.cliente.telefono !== 'string' || !b.cliente.telefono.trim()) {\n    err('cliente.telefono', 'obligatorio (texto)');\n  } else {\n    telefono = normalizarTelefono(b.cliente.telefono);\n    if (!telefono) err('cliente.telefono', 'no es un celular colombiano válido (10 dígitos que inicien en 3)');\n  }\n}\n\n// items\nconst items = [];\nif (!Array.isArray(b.items) || b.items.length === 0) {\n  err('items', 'obligatorio y debe tener al menos 1 elemento');\n} else {\n  b.items.forEach((it, i) => {\n    const p = `items[${i}]`;\n    if (!esObjeto(it)) { err(p, 'debe ser un objeto'); return; }\n    const okProd = esTexto(it.producto);\n    if (!okProd) err(`${p}.producto`, 'obligatorio (texto no vacío)');\n    const okCant = Number.isInteger(it.cantidad) && it.cantidad > 0 && it.cantidad <= MAX_CANTIDAD;\n    if (!okCant) err(`${p}.cantidad`, `debe ser un entero entre 1 y ${MAX_CANTIDAD}`);\n    if (okProd && okCant) items.push({ producto: limpio(it.producto), cantidad: it.cantidad });\n  });\n}\n\n// dirección\nlet direccion = null;\nif (!esTexto(b.direccion)) err('direccion', 'obligatoria (texto no vacío)');\nelse if (limpio(b.direccion).length > 200) err('direccion', 'máximo 200 caracteres');\nelse direccion = limpio(b.direccion);\n\n// pago\nlet pago = null;\nif (typeof b.pago !== 'string') err('pago', `obligatorio; valores permitidos: ${PAGOS.join(', ')}`);\nelse {\n  pago = b.pago.trim().toLowerCase();\n  if (!PAGOS.includes(pago)) { err('pago', `valor inválido; permitidos: ${PAGOS.join(', ')}`); pago = null; }\n}\n\n// ---------- salida ----------\nif (Object.keys(errores).length > 0) {\n  return [{ json: { valido: false, status: 400, errores } }];\n}\n\n// pedido_id determinista: mismo teléfono + mismos items + misma ventana de tiempo => mismo id.\n// Nota: con ventanas fijas, dos envíos duplicados que crucen el límite de la ventana generan ids distintos.\n// Si eso importa, súbelo a VENTANA_MIN = 5 o guarda el último pedido por teléfono y compara.\nconst ventana = Math.floor(Date.now() / (VENTANA_MIN * 60000));\nconst clave = JSON.stringify({\n  t: telefono,\n  i: [...items]\n    .map(x => [x.producto.toLowerCase(), x.cantidad])\n    .sort((a, c) => (a[0] < c[0] ? -1 : a[0] > c[0] ? 1 : a[1] - c[1])),\n  v: ventana,\n});\nconst pedido_id = 'P-' + hash53(clave);\n\nreturn [{\n  json: {\n    valido: true,\n    status: 202,\n    pedido_id,\n    pedido: {\n      cliente: { nombre, telefono },\n      items,\n      direccion,\n      pago,\n      recibido_en: new Date().toISOString(),\n    },\n  },\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "d4b06af1-f99f-45d5-a8a4-860999b1ec06",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f548fcdc-0204-48f7-9624-d29886f82e7a",
+              "leftValue": "={{ $json.valido }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        448,
+        0
+      ],
+      "id": "bfb3bcea-7800-459a-8b46-797ac64e707f",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { pedido_id: $json.pedido_id } }}",
+        "options": {
+          "responseCode": 202
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        624,
+        -80
+      ],
+      "id": "bcc899bf-621e-4325-a58d-5cf702d95c65",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"error\": \"validacion\",\n  \"detalles\": {{ JSON.stringify($json.errores) }}\n}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        624,
+        64
+      ],
+      "id": "e699ae35-6a99-4efe-b8ed-c08a401f1715",
+      "name": "Respond to Webhook1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "2e7ad745-cd3a-4108-86c2-44ca3105c2f8",
+  "nodeGroups": [],
+  "id": "jFQRPLYIZB0JMCE2",
+  "tags": []
+}
