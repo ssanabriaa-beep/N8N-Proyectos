@@ -1,0 +1,67 @@
+{
+  "name": "errores-global",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "62965b6f-3f06-402a-a9d3-bdf514b98c20",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "chatId": "8848991999",
+        "text": "=⚠️ Falló: {{ $json.workflow.name }}\nNodo: {{ $json.execution.lastNodeExecuted }}\nError: {{ $json.execution.error.message }}\nAbrir: {{ $json.execution.url }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "c9f7f8a2-c7a1-4247-981c-6a97fc79e343",
+      "name": "Send a text message",
+      "webhookId": "bc665267-eed7-4717-a410-e2021253274a",
+      "credentials": {
+        "telegramApi": {
+          "id": "6L8HztllB6ZN305o",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "e692db37-c3cc-4d04-97a3-6d2dee2da462",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4f828efc9f971b36ba95aa9a3e5fdc9cc7913557478e19eb3e5e0dd24017f949"
+  },
+  "nodeGroups": [],
+  "id": "sPzjaBLiVarqYerZ",
+  "tags": []
+}
