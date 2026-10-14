@@ -35,23 +35,32 @@ async function enviar(body) {
 }
 
 let fallos = 0;
-const ids = [];
+const ok202 = [];
 
 for (const c of casos) {
   const r = await enviar(c.body);
   const ok = r.status === c.esperado;
   if (!ok) fallos++;
-  if (r.status === 202 && r.json?.pedido_id) ids.push(r.json.pedido_id);
+  if (r.status === 202 && r.json?.pedido_id) ok202.push(r.json);
   console.log(`${ok ? 'OK  ' : 'FAIL'} [${r.status}] ${c.nombre}`, ok ? '' : `(esperado ${c.esperado})`);
   if (r.status === 400) console.log('       errores:', JSON.stringify(r.json?.detalles ?? r.json));
 }
 
 // Idempotencia: el mismo pedido (teléfono en distinto formato) debe dar el mismo pedido_id
 // (ambos válidos enviados dentro de la misma ventana de tiempo).
-if (ids.length === 2) {
-  const igual = ids[0] === ids[1];
+if (ok202.length === 2) {
+  const igual = ok202[0].pedido_id === ok202[1].pedido_id;
   if (!igual) fallos++;
-  console.log(`${igual ? 'OK  ' : 'FAIL'} mismo pedido => mismo pedido_id (${ids[0]} vs ${ids[1]})`);
+  console.log(`${igual ? 'OK  ' : 'FAIL'} mismo pedido => mismo pedido_id (${ok202[0].pedido_id} vs ${ok202[1].pedido_id})`);
+
+  // Día 4: si el flujo ya consulta Sheets, el 1.º debe ser nuevo y el 2.º duplicado.
+  // (Vacía las filas de prueba de la hoja antes de correr el script.)
+  if (ok202.every(x => 'duplicado' in x)) {
+    const bien = ok202[0].duplicado === false && ok202[1].duplicado === true;
+    if (!bien) fallos++;
+    console.log(`${bien ? 'OK  ' : 'FAIL'} duplicado: 1.º=${ok202[0].duplicado}, 2.º=${ok202[1].duplicado} (esperado false, true)`);
+    console.log('     Ahora abre la hoja: debe haber UNA sola fila nueva.');
+  }
 }
 
 console.log(fallos === 0 ? '\nTodo bien.' : `\n${fallos} prueba(s) fallaron.`);
