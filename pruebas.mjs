@@ -6,6 +6,7 @@
 const URL_WEBHOOK = process.argv[2] ?? 'http://localhost:5678/webhook/pedido';
 
 const valido = () => ({
+  restaurante_id: 'pizzeria-centro',
   cliente: { nombre: 'Ana Pérez', telefono: '300 123 4567' },
   items: [{ producto: 'Bandeja paisa', cantidad: 2 }],
   direccion: 'Cra 78 # 38 Sur',
@@ -20,6 +21,8 @@ const casos = [
   { nombre: 'teléfono inválido', body: con(p => { p.cliente.telefono = '123'; }), esperado: 400 },
   { nombre: 'pago fuera del enum', body: con(p => { p.pago = 'bitcoin'; }), esperado: 400 },
   { nombre: 'cantidad 0', body: con(p => { p.items[0].cantidad = 0; }), esperado: 400 },
+  { nombre: 'sin restaurante_id', body: con(p => { delete p.restaurante_id; }), esperado: 400 },
+  { nombre: 'restaurante_id con formato inválido', body: con(p => { p.restaurante_id = 'Mi Pizzería!!'; }), esperado: 400 },
   { nombre: 'items vacío', body: con(p => { p.items = []; }), esperado: 400 },
 ];
 
