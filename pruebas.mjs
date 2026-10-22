@@ -5,6 +5,9 @@
 
 const URL_WEBHOOK = process.argv[2] ?? 'http://localhost:5678/webhook/pedido';
 
+// Código que devuelve el flujo cuando el restaurante no existe o está inactivo (404, o 400 si prefieres).
+const RESTAURANTE_RECHAZADO = 404;
+
 const valido = () => ({
   restaurante_id: 'pizzeria-centro',
   cliente: { nombre: 'Ana Pérez', telefono: '300 123 4567' },
@@ -23,6 +26,8 @@ const casos = [
   { nombre: 'cantidad 0', body: con(p => { p.items[0].cantidad = 0; }), esperado: 400 },
   { nombre: 'sin restaurante_id', body: con(p => { delete p.restaurante_id; }), esperado: 400 },
   { nombre: 'restaurante_id con formato inválido', body: con(p => { p.restaurante_id = 'Mi Pizzería!!'; }), esperado: 400 },
+  { nombre: 'restaurante inexistente', body: con(p => { p.restaurante_id = 'no-existe-xyz'; }), esperado: RESTAURANTE_RECHAZADO },
+  { nombre: 'restaurante inactivo (activo = no)', body: con(p => { p.restaurante_id = 'asadero-sur'; }), esperado: RESTAURANTE_RECHAZADO },
   { nombre: 'items vacío', body: con(p => { p.items = []; }), esperado: 400 },
 ];
 
@@ -46,7 +51,7 @@ for (const c of casos) {
   if (!ok) fallos++;
   if (r.status === 202 && r.json?.pedido_id) ok202.push(r.json);
   console.log(`${ok ? 'OK  ' : 'FAIL'} [${r.status}] ${c.nombre}`, ok ? '' : `(esperado ${c.esperado})`);
-  if (r.status === 400) console.log('       errores:', JSON.stringify(r.json?.detalles ?? r.json));
+  if (r.status === 400 || r.status === 404) console.log('       respuesta:', JSON.stringify(r.json?.detalles ?? r.json));
 }
 
 // Idempotencia: el mismo pedido (teléfono en distinto formato) debe dar el mismo pedido_id
@@ -65,6 +70,11 @@ if (ok202.length === 2) {
     console.log('     Ahora abre la hoja: debe haber UNA sola fila nueva.');
   }
 }
+
+console.log('\nRevisa a mano (con la hoja Pedidos vacía antes de correr):');
+console.log('  - Hoja Pedidos: 1 fila nueva (pizzeria-centro). Ninguna de asadero-sur ni no-existe-xyz.');
+console.log('  - Telegram del restaurante: 1 mensaje.');
+console.log('  - Telegram de alertas: 0 mensajes (los 400/404 son respuestas controladas, no errores del flujo).');
 
 console.log(fallos === 0 ? '\nTodo bien.' : `\n${fallos} prueba(s) fallaron.`);
 process.exit(fallos === 0 ? 0 : 1);
