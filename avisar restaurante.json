@@ -1,0 +1,82 @@
+{
+  "name": "avisar restaurante",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "chat_id"
+            },
+            {
+              "name": "texto"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -64,
+        0
+      ],
+      "id": "374fc7c7-3a9b-4593-9bbf-9db0a47bb969",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{ $json.texto }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        160,
+        0
+      ],
+      "id": "05066913-f96b-49a8-a1a0-8efccb6bcb0d",
+      "name": "Send a text message",
+      "webhookId": "f81b06be-c196-4965-a208-70e57da52eaa",
+      "retryOnFail": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "6L8HztllB6ZN305o",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "95681b13-0794-42a9-9f24-0dcb124fc4b4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4f828efc9f971b36ba95aa9a3e5fdc9cc7913557478e19eb3e5e0dd24017f949"
+  },
+  "nodeGroups": [],
+  "id": "nsVxyVWym1FCx5Ma",
+  "tags": []
+}

@@ -1,0 +1,83 @@
+{
+  "name": "Alertar admin",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "texto"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "2c0114ee-edb3-45b0-a580-e645ec247277",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "chatId": "CHAT_ID_ADMIN",
+        "text": "={{ $json.texto }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "5ecf4ef2-cfcd-47d8-a276-2d014091e073",
+      "name": "Send a text message",
+      "webhookId": "f4683302-2f6d-408f-900b-4845b6151947",
+      "credentials": {
+        "telegramApi": {
+          "id": "6L8HztllB6ZN305o",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "texto": "prueba alerta"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "4d41288b-65d4-450c-a814-5a1aaaf0e6b1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4f828efc9f971b36ba95aa9a3e5fdc9cc7913557478e19eb3e5e0dd24017f949"
+  },
+  "nodeGroups": [],
+  "id": "gAqoqUREzwoNBZhc",
+  "tags": []
+}

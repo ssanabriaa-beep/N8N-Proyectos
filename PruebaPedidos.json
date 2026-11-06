@@ -3,50 +3,6 @@
   "nodes": [
     {
       "parameters": {
-        "documentId": {
-          "__rl": true,
-          "value": "1Q-KewgXZ1O4AIa_26wYYbEPiliFpqWMYpQ2lI-0qGs0",
-          "mode": "list",
-          "cachedResultName": "Pedidos restaurante",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Q-KewgXZ1O4AIa_26wYYbEPiliFpqWMYpQ2lI-0qGs0/edit?usp=drivesdk"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": "gid=0",
-          "mode": "list",
-          "cachedResultName": "Pedidos",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Q-KewgXZ1O4AIa_26wYYbEPiliFpqWMYpQ2lI-0qGs0/edit#gid=0"
-        },
-        "filtersUI": {
-          "values": [
-            {
-              "lookupColumn": "pedido_id",
-              "lookupValue": "={{ $('Code in JavaScript1').first().json.pedido_id }}"
-            }
-          ]
-        },
-        "options": {
-          "returnFirstMatch": true
-        }
-      },
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.7,
-      "position": [
-        32,
-        -32
-      ],
-      "id": "86f6fe69-db38-4c1d-b531-17f61cd27c09",
-      "name": "Get row(s) in sheet",
-      "alwaysOutputData": true,
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "WmH1jGJKZIZ0XRx0",
-          "name": "Google Sheets account"
-        }
-      }
-    },
-    {
-      "parameters": {
         "conditions": {
           "options": {
             "caseSensitive": true,
@@ -73,8 +29,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        256,
-        -32
+        448,
+        -128
       ],
       "id": "f401f53b-d4ad-43f1-a880-43520e461e8e",
       "name": "If1",
@@ -100,14 +56,17 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "pedido_id": "={{ $('Code in JavaScript1').first().json.pedido_id }}",
-            "fecha": "={{ $('Code in JavaScript1').first().json.pedido.recibido_en }}",
-            "nombre": "={{ $('Code in JavaScript1').first().json.pedido.cliente.nombre }}",
-            "telefono": "={{ $('Code in JavaScript1').first().json.pedido.cliente.telefono }}",
-            "productos": "={{ $('Code in JavaScript1').first().json.pedido.items.map(i => i.cantidad + ' x ' + i.producto).join(', ') }}",
-            "direccion": "={{ $('Code in JavaScript1').first().json.pedido.direccion }}",
-            "pago": "={{ $('Code in JavaScript1').first().json.pedido.pago }}",
-            "estado": "recibido"
+            "pedido_id": "={{ $('Validar pedido').first().json.pedido_id }}",
+            "fecha": "={{ $('Validar pedido').first().json.pedido.recibido_en }}",
+            "nombre": "={{ $('Validar pedido').first().json.pedido.cliente.nombre }}",
+            "telefono": "={{ $('Validar pedido').first().json.pedido.cliente.telefono }}",
+            "productos": "={{ $('Validar pedido').first().json.pedido.items.map(i => i.cantidad + ' x ' + i.producto).join(', ') }}",
+            "direccion": "={{ $('Validar pedido').first().json.pedido.direccion }}",
+            "pago": "={{ $('Validar pedido').first().json.pedido.pago }}",
+            "estado": "recibido",
+            "restaurante_id": "={{ $('Validar pedido').first().json.restaurante_id }}",
+            "avisado": "no",
+            "intentos": "0"
           },
           "matchingColumns": [],
           "schema": [
@@ -190,6 +149,36 @@
               "type": "string",
               "canBeUsedToMatch": true,
               "removed": false
+            },
+            {
+              "id": "restaurante_id",
+              "displayName": "restaurante_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "avisado",
+              "displayName": "avisado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "intentos",
+              "displayName": "intentos",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
             }
           ],
           "attemptToConvertTypes": false,
@@ -200,8 +189,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        480,
-        64
+        672,
+        -32
       ],
       "id": "dd828c0f-535f-480f-9e71-7d682a7febc9",
       "name": "Append row in sheet",
@@ -215,7 +204,7 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ { pedido_id: $('Code in JavaScript1').first().json.pedido_id, duplicado: false } }}",
+        "responseBody": "={{ { pedido_id: $('Validar pedido').first().json.pedido_id, duplicado: false } }}",
         "options": {
           "responseCode": 202
         }
@@ -223,8 +212,8 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        704,
-        80
+        896,
+        -16
       ],
       "id": "5801a438-d370-4505-b905-2660977c20bb",
       "name": "Respond to Webhook2"
@@ -239,25 +228,12 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -640,
-        64
+        -1376,
+        0
       ],
       "id": "2c077fa4-6ab3-4f1b-9ea5-6a09aafc7ee6",
       "name": "Webhook1",
       "webhookId": "38cabbd5-7841-433c-b191-18586657fa6d"
-    },
-    {
-      "parameters": {
-        "jsCode": "// Nodo Code de n8n -> Language: JavaScript, Mode: \"Run Once for All Items\"\n// Entrada: salida del nodo Webhook (POST /pedido). Salida: 1 item con\n//   válido   -> { valido: true,  status: 202, pedido_id, pedido }\n//   inválido -> { valido: false, status: 400, errores: { \"campo\": [\"msg\", ...] } }\n\nconst VENTANA_MIN = 1;          // ventana de tiempo para el pedido_id (ver nota abajo)\nconst MAX_CANTIDAD = 100;\nconst PAGOS = ['efectivo', 'nequi', 'datafono'];\n\n// ---------- utilidades ----------\nconst errores = {};\nconst err = (campo, msg) => { (errores[campo] ??= []).push(msg); };\nconst esTexto = (v) => typeof v === 'string' && v.trim().length > 0;\nconst limpio = (v) => String(v).trim().replace(/\\s+/g, ' ');\nconst esObjeto = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);\n\n// Celular colombiano -> 57XXXXXXXXXX (acepta \"300 123 4567\", \"+57-300-1234567\", \"0057 300...\")\nfunction normalizarTelefono(raw) {\n  let d = String(raw).replace(/\\D/g, '');\n  if (d.startsWith('00')) d = d.slice(2);\n  if (/^3\\d{9}$/.test(d)) d = '57' + d;\n  return /^573\\d{9}$/.test(d) ? d : null;\n}\n\n// Hash determinista de 53 bits (cyrb53), sin dependencias.\n// Para algo criptográfico usa require('crypto') (requiere NODE_FUNCTION_ALLOW_BUILTIN=crypto en n8n).\nfunction hash53(str, seed = 0) {\n  let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;\n  for (let i = 0; i < str.length; i++) {\n    const ch = str.charCodeAt(i);\n    h1 = Math.imul(h1 ^ ch, 2654435761);\n    h2 = Math.imul(h2 ^ ch, 1597334677);\n  }\n  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);\n  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);\n  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16).padStart(14, '0');\n}\n\n// ---------- entrada ----------\nconst entrada = $input.first().json;\nconst b = entrada.body ?? entrada;   // el Webhook entrega el JSON en .body\n\nif (!esObjeto(b)) {\n  err('body', 'debe ser un objeto JSON');\n  return [{ json: { valido: false, status: 400, errores } }];\n}\n\n// ---------- validación ----------\n// cliente\nlet nombre = null, telefono = null;\nif (!esObjeto(b.cliente)) {\n  err('cliente', 'obligatorio y debe ser un objeto');\n} else {\n  if (!esTexto(b.cliente.nombre)) err('cliente.nombre', 'obligatorio (texto no vacío)');\n  else if (limpio(b.cliente.nombre).length > 80) err('cliente.nombre', 'máximo 80 caracteres');\n  else nombre = limpio(b.cliente.nombre);\n\n  if (typeof b.cliente.telefono !== 'string' || !b.cliente.telefono.trim()) {\n    err('cliente.telefono', 'obligatorio (texto)');\n  } else {\n    telefono = normalizarTelefono(b.cliente.telefono);\n    if (!telefono) err('cliente.telefono', 'no es un celular colombiano válido (10 dígitos que inicien en 3)');\n  }\n}\n\n// items\nconst items = [];\nif (!Array.isArray(b.items) || b.items.length === 0) {\n  err('items', 'obligatorio y debe tener al menos 1 elemento');\n} else {\n  b.items.forEach((it, i) => {\n    const p = `items[${i}]`;\n    if (!esObjeto(it)) { err(p, 'debe ser un objeto'); return; }\n    const okProd = esTexto(it.producto);\n    if (!okProd) err(`${p}.producto`, 'obligatorio (texto no vacío)');\n    const okCant = Number.isInteger(it.cantidad) && it.cantidad > 0 && it.cantidad <= MAX_CANTIDAD;\n    if (!okCant) err(`${p}.cantidad`, `debe ser un entero entre 1 y ${MAX_CANTIDAD}`);\n    if (okProd && okCant) items.push({ producto: limpio(it.producto), cantidad: it.cantidad });\n  });\n}\n\n// dirección\nlet direccion = null;\nif (!esTexto(b.direccion)) err('direccion', 'obligatoria (texto no vacío)');\nelse if (limpio(b.direccion).length > 200) err('direccion', 'máximo 200 caracteres');\nelse direccion = limpio(b.direccion);\n\n// pago\nlet pago = null;\nif (typeof b.pago !== 'string') err('pago', `obligatorio; valores permitidos: ${PAGOS.join(', ')}`);\nelse {\n  pago = b.pago.trim().toLowerCase();\n  if (!PAGOS.includes(pago)) { err('pago', `valor inválido; permitidos: ${PAGOS.join(', ')}`); pago = null; }\n}\n\n// ---------- salida ----------\nif (Object.keys(errores).length > 0) {\n  return [{ json: { valido: false, status: 400, errores } }];\n}\n\n// pedido_id determinista: mismo teléfono + mismos items + misma ventana de tiempo => mismo id.\n// Nota: con ventanas fijas, dos envíos duplicados que crucen el límite de la ventana generan ids distintos.\n// Si eso importa, súbelo a VENTANA_MIN = 5 o guarda el último pedido por teléfono y compara.\nconst ventana = Math.floor(Date.now() / (VENTANA_MIN * 60000));\nconst clave = JSON.stringify({\n  t: telefono,\n  i: [...items]\n    .map(x => [x.producto.toLowerCase(), x.cantidad])\n    .sort((a, c) => (a[0] < c[0] ? -1 : a[0] > c[0] ? 1 : a[1] - c[1])),\n  v: ventana,\n});\nconst pedido_id = 'P-' + hash53(clave);\n\nreturn [{\n  json: {\n    valido: true,\n    status: 202,\n    pedido_id,\n    pedido: {\n      cliente: { nombre, telefono },\n      items,\n      direccion,\n      pago,\n      recibido_en: new Date().toISOString(),\n    },\n  },\n}];\n"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -416,
-        64
-      ],
-      "id": "979aa4a2-4c41-4dd0-9884-f6f4fa286056",
-      "name": "Code in JavaScript1"
     },
     {
       "parameters": {
@@ -287,8 +263,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -192,
-        64
+        -928,
+        0
       ],
       "id": "57cad561-c660-49e2-9e64-6accb7e95a1d",
       "name": "If2"
@@ -304,8 +280,8 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        32,
-        160
+        -720,
+        96
       ],
       "id": "bc7331b3-1699-4dd2-9475-fb9d49ddf677",
       "name": "Respond to Webhook3"
@@ -313,7 +289,7 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ { pedido_id: $('Code in JavaScript1').first().json.pedido_id, duplicado: true } }}",
+        "responseBody": "={{ { pedido_id: $('Validar pedido').first().json.pedido_id, duplicado: true } }}",
         "options": {
           "responseCode": 202
         }
@@ -321,52 +297,507 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        480,
-        -128
+        672,
+        -224
       ],
       "id": "56c0e5ec-dcba-4c4c-858f-a75ae8f0ed07",
       "name": "Respond to Webhook4"
     },
     {
       "parameters": {
-        "chatId": "-5402357830",
-        "text": "=🆕 Pedido {{ $('Code in JavaScript1').first().json.pedido_id }}\n   Cliente: {{ $('Code in JavaScript1').first().json.pedido.cliente.nombre }} ({{ $('Code in JavaScript1').first().json.pedido.cliente.telefono }})\n   Productos: {{ $('Code in JavaScript1').first().json.pedido.items.map(i => i.cantidad + ' x ' + i.producto).join(', ') }}\n   Dirección: {{ $('Code in JavaScript1').first().json.pedido.direccion }}\n   Pago: {{ $('Code in JavaScript1').first().json.pedido.pago }}",
-        "additionalFields": {
-          "appendAttribution": false
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "9cf47666-b77a-462a-9bf1-d8cf890a337b",
+              "leftValue": "={{ String($json.activo).trim().toLowerCase() }}",
+              "rightValue": "si",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -64,
+        -96
+      ],
+      "id": "16d5f1ff-0a1e-4bc2-9946-a384dd9e622e",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { error: \"restaurante no disponible\" } }}",
+        "options": {
+          "responseCode": 403
         }
       },
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
       "position": [
-        928,
-        80
+        224,
+        16
       ],
-      "id": "a67f10d1-1bdf-4f64-b6fc-f217264726f2",
-      "name": "Send a text message",
-      "webhookId": "2e9dd224-02f9-4bb5-a2f0-b79d34cc6ddf",
-      "retryOnFail": true,
-      "waitBetweenTries": 2000,
+      "id": "dcdda947-6724-4aea-8f5e-3f510ba0c2e7",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1Q-KewgXZ1O4AIa_26wYYbEPiliFpqWMYpQ2lI-0qGs0",
+          "mode": "list",
+          "cachedResultName": "Pedidos restaurante",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Q-KewgXZ1O4AIa_26wYYbEPiliFpqWMYpQ2lI-0qGs0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1245719118,
+          "mode": "list",
+          "cachedResultName": "Restaurantes",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Q-KewgXZ1O4AIa_26wYYbEPiliFpqWMYpQ2lI-0qGs0/edit#gid=1245719118"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "restaurante_id",
+              "lookupValue": "={{ $('Validar pedido').first().json.restaurante_id }}"
+            }
+          ]
+        },
+        "options": {
+          "returnFirstMatch": true
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -704,
+        -96
+      ],
+      "id": "eaa3564b-a9e9-4e56-9dd9-bcbfccb18160",
+      "name": "Buscar restaurante",
+      "alwaysOutputData": true,
       "credentials": {
-        "telegramApi": {
-          "id": "6L8HztllB6ZN305o",
-          "name": "Telegram account"
+        "googleSheetsOAuth2Api": {
+          "id": "WmH1jGJKZIZ0XRx0",
+          "name": "Google Sheets account"
         }
       }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Nodo Code de n8n -> Language: JavaScript, Mode: \"Run Once for All Items\"\n// Entrada: salida del nodo Webhook (POST /pedido). Salida: 1 item con\n//   válido   -> { valido: true,  status: 202, pedido_id, pedido }\n//   inválido -> { valido: false, status: 400, errores: { \"campo\": [\"msg\", ...] } }\n\nconst VENTANA_MIN = 1;          // ventana de tiempo para el pedido_id (ver nota abajo)\nconst MAX_CANTIDAD = 100;\nconst PAGOS = ['efectivo', 'nequi', 'datafono'];\n\n// ---------- utilidades ----------\nconst errores = {};\nconst err = (campo, msg) => { (errores[campo] ??= []).push(msg); };\nconst esTexto = (v) => typeof v === 'string' && v.trim().length > 0;\nconst limpio = (v) => String(v).trim().replace(/\\s+/g, ' ');\nconst esObjeto = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);\n\n// Celular colombiano -> 57XXXXXXXXXX (acepta \"300 123 4567\", \"+57-300-1234567\", \"0057 300...\")\nfunction normalizarTelefono(raw) {\n  let d = String(raw).replace(/\\D/g, '');\n  if (d.startsWith('00')) d = d.slice(2);\n  if (/^3\\d{9}$/.test(d)) d = '57' + d;\n  return /^573\\d{9}$/.test(d) ? d : null;\n}\n\n// Hash determinista de 53 bits (cyrb53), sin dependencias.\n// Para algo criptográfico usa require('crypto') (requiere NODE_FUNCTION_ALLOW_BUILTIN=crypto en n8n).\nfunction hash53(str, seed = 0) {\n  let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;\n  for (let i = 0; i < str.length; i++) {\n    const ch = str.charCodeAt(i);\n    h1 = Math.imul(h1 ^ ch, 2654435761);\n    h2 = Math.imul(h2 ^ ch, 1597334677);\n  }\n  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);\n  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);\n  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16).padStart(14, '0');\n}\n\n// ---------- entrada ----------\nconst entrada = $input.first().json;\nconst b = entrada.body ?? entrada;   // el Webhook entrega el JSON en .body\n\nif (!esObjeto(b)) {\n  err('body', 'debe ser un objeto JSON');\n  return [{ json: { valido: false, status: 400, errores } }];\n}\n\n// ---------- validación ----------\n// restaurante: identifica a quién pertenece el pedido (Día 6).\n// Solo minúsculas, números y guiones, para que sea seguro usarlo como clave de búsqueda.\nlet restaurante_id = null;\nif (typeof b.restaurante_id !== 'string' || !b.restaurante_id.trim()) {\n  err('restaurante_id', 'obligatorio (texto)');\n} else {\n  restaurante_id = b.restaurante_id.trim().toLowerCase();\n  if (!/^[a-z0-9-]{3,40}$/.test(restaurante_id)) {\n    err('restaurante_id', 'formato inválido (3 a 40 caracteres: minúsculas, números y guiones)');\n    restaurante_id = null;\n  }\n}\n\n// cliente\nlet nombre = null, telefono = null;\nif (!esObjeto(b.cliente)) {\n  err('cliente', 'obligatorio y debe ser un objeto');\n} else {\n  if (!esTexto(b.cliente.nombre)) err('cliente.nombre', 'obligatorio (texto no vacío)');\n  else if (limpio(b.cliente.nombre).length > 80) err('cliente.nombre', 'máximo 80 caracteres');\n  else nombre = limpio(b.cliente.nombre);\n\n  if (typeof b.cliente.telefono !== 'string' || !b.cliente.telefono.trim()) {\n    err('cliente.telefono', 'obligatorio (texto)');\n  } else {\n    telefono = normalizarTelefono(b.cliente.telefono);\n    if (!telefono) err('cliente.telefono', 'no es un celular colombiano válido (10 dígitos que inicien en 3)');\n  }\n}\n\n// items\nconst items = [];\nif (!Array.isArray(b.items) || b.items.length === 0) {\n  err('items', 'obligatorio y debe tener al menos 1 elemento');\n} else {\n  b.items.forEach((it, i) => {\n    const p = `items[${i}]`;\n    if (!esObjeto(it)) { err(p, 'debe ser un objeto'); return; }\n    const okProd = esTexto(it.producto);\n    if (!okProd) err(`${p}.producto`, 'obligatorio (texto no vacío)');\n    const okCant = Number.isInteger(it.cantidad) && it.cantidad > 0 && it.cantidad <= MAX_CANTIDAD;\n    if (!okCant) err(`${p}.cantidad`, `debe ser un entero entre 1 y ${MAX_CANTIDAD}`);\n    if (okProd && okCant) items.push({ producto: limpio(it.producto), cantidad: it.cantidad });\n  });\n}\n\n// dirección\nlet direccion = null;\nif (!esTexto(b.direccion)) err('direccion', 'obligatoria (texto no vacío)');\nelse if (limpio(b.direccion).length > 200) err('direccion', 'máximo 200 caracteres');\nelse direccion = limpio(b.direccion);\n\n// pago\nlet pago = null;\nif (typeof b.pago !== 'string') err('pago', `obligatorio; valores permitidos: ${PAGOS.join(', ')}`);\nelse {\n  pago = b.pago.trim().toLowerCase();\n  if (!PAGOS.includes(pago)) { err('pago', `valor inválido; permitidos: ${PAGOS.join(', ')}`); pago = null; }\n}\n\n// ---------- salida ----------\nif (Object.keys(errores).length > 0) {\n  return [{ json: { valido: false, status: 400, errores } }];\n}\n\n// pedido_id determinista: mismo teléfono + mismos items + misma ventana de tiempo => mismo id.\n// Nota: con ventanas fijas, dos envíos duplicados que crucen el límite de la ventana generan ids distintos.\n// Si eso importa, súbelo a VENTANA_MIN = 5 o guarda el último pedido por teléfono y compara.\nconst ventana = Math.floor(Date.now() / (VENTANA_MIN * 60000));\n// El restaurante entra en la clave: el mismo pedido enviado a dos restaurantes distintos NO es un duplicado.\nconst clave = JSON.stringify({\n  r: restaurante_id,\n  t: telefono,\n  i: [...items]\n    .map(x => [x.producto.toLowerCase(), x.cantidad])\n    .sort((a, c) => (a[0] < c[0] ? -1 : a[0] > c[0] ? 1 : a[1] - c[1])),\n  v: ventana,\n});\nconst pedido_id = 'P-' + hash53(clave);\n\nreturn [{\n  json: {\n    valido: true,\n    status: 202,\n    pedido_id,\n    restaurante_id,\n    pedido: {\n      cliente: { nombre, telefono },\n      items,\n      direccion,\n      pago,\n      recibido_en: new Date().toISOString(),\n    },\n  },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1152,
+        0
+      ],
+      "id": "979aa4a2-4c41-4dd0-9884-f6f4fa286056",
+      "name": "Validar pedido"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1Q-KewgXZ1O4AIa_26wYYbEPiliFpqWMYpQ2lI-0qGs0",
+          "mode": "list",
+          "cachedResultName": "Pedidos restaurante",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Q-KewgXZ1O4AIa_26wYYbEPiliFpqWMYpQ2lI-0qGs0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Pedidos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Q-KewgXZ1O4AIa_26wYYbEPiliFpqWMYpQ2lI-0qGs0/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "pedido_id",
+              "lookupValue": "={{ $('Validar pedido').first().json.pedido_id }}"
+            }
+          ]
+        },
+        "options": {
+          "returnFirstMatch": true
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        -128
+      ],
+      "id": "86f6fe69-db38-4c1d-b531-17f61cd27c09",
+      "name": "Buscar pedido",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "WmH1jGJKZIZ0XRx0",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { error: \"no autorizado\" } }}",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -224,
+        32
+      ],
+      "id": "a170092d-172f-467b-bd05-1b70ffb9694f",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "553d31b9-9e2d-4d2a-9e5c-2a48ce1bcba7",
+              "leftValue": "={{ $json.token_hash }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "f1cdf288-57d7-413e-b424-df4dc3ee5658",
+              "leftValue": "={{ $json.token_hash }}",
+              "rightValue": "={{ $json.token_recibido_hash }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -384,
+        -96
+      ],
+      "id": "9fce5c1a-cf6d-4659-a10c-f716fc5908ca",
+      "name": "Token valido"
+    },
+    {
+      "parameters": {
+        "value": "={{ $('Webhook1').first().json.headers['x-restaurant-token'] ?? '' }}",
+        "dataPropertyName": "token_recibido_hash"
+      },
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 2,
+      "position": [
+        -544,
+        -96
+      ],
+      "id": "9d5fc001-a800-40bd-9158-68e13762bd8d",
+      "name": "Hash del token"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "nsVxyVWym1FCx5Ma",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/nsVxyVWym1FCx5Ma",
+          "cachedResultName": "avisar restaurante"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chat_id": "={{ $('Buscar restaurante').first().json.chat_id }}",
+            "texto": "={{ \"Nuevo pedido \" + $('Validar pedido').first().json.pedido_id + \"\\nCliente: \" + $('Validar pedido').first().json.pedido.cliente.nombre + \" (\" + $('Validar pedido').first().json.pedido.cliente.telefono + \")\\nProductos: \" + $('Validar pedido').first().json.pedido.items.map(i => i.cantidad + \" x \" + i.producto).join(\", \") + \"\\nDirección: \" + $('Validar pedido').first().json.pedido.direccion + \"\\nPago: \" + $('Validar pedido').first().json.pedido.pago }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "texto",
+              "displayName": "texto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.4,
+      "position": [
+        1120,
+        -48
+      ],
+      "id": "5a070f79-8bd6-4565-8090-e55ff73a127a",
+      "name": "Call 'avisar restaurante'",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1Q-KewgXZ1O4AIa_26wYYbEPiliFpqWMYpQ2lI-0qGs0",
+          "mode": "list",
+          "cachedResultName": "Pedidos restaurante",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Q-KewgXZ1O4AIa_26wYYbEPiliFpqWMYpQ2lI-0qGs0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Pedidos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Q-KewgXZ1O4AIa_26wYYbEPiliFpqWMYpQ2lI-0qGs0/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "avisado": "si",
+            "pedido_id": "={{ $('Validar pedido').first().json.pedido_id }}"
+          },
+          "matchingColumns": [
+            "pedido_id"
+          ],
+          "schema": [
+            {
+              "id": "pedido_id",
+              "displayName": "pedido_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "fecha",
+              "displayName": "fecha",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "nombre",
+              "displayName": "nombre",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "telefono",
+              "displayName": "telefono",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "productos",
+              "displayName": "productos",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "direccion",
+              "displayName": "direccion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "pago",
+              "displayName": "pago",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "estado",
+              "displayName": "estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "restaurante_id",
+              "displayName": "restaurante_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "avisado",
+              "displayName": "avisado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "intentos",
+              "displayName": "intentos",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1344,
+        -144
+      ],
+      "id": "11e0d903-764e-40fa-a4e7-bbd69fb4254a",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "WmH1jGJKZIZ0XRx0",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "gAqoqUREzwoNBZhc",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/gAqoqUREzwoNBZhc",
+          "cachedResultName": "Alertar admin"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "texto": "={{ \"Aviso FALLIDO. Pedido \" + $('Validar pedido').first().json.pedido_id + \" del restaurante \" + $('Validar pedido').first().json.restaurante_id + \" quedó con avisado=no\" }}"
+          },
+          "matchingColumns": [
+            "texto"
+          ],
+          "schema": [
+            {
+              "id": "texto",
+              "displayName": "texto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.4,
+      "position": [
+        1344,
+        48
+      ],
+      "id": "5db3cf01-9176-4095-ae7f-1f845993321d",
+      "name": "Call 'avisar restaurante'1"
     }
   ],
   "pinData": {},
   "connections": {
-    "Get row(s) in sheet": {
-      "main": [
-        [
-          {
-            "node": "If1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "If1": {
       "main": [
         [
@@ -400,18 +831,7 @@
       "main": [
         [
           {
-            "node": "Code in JavaScript1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Code in JavaScript1": {
-      "main": [
-        [
-          {
-            "node": "If2",
+            "node": "Validar pedido",
             "type": "main",
             "index": 0
           }
@@ -422,7 +842,7 @@
       "main": [
         [
           {
-            "node": "Get row(s) in sheet",
+            "node": "Buscar restaurante",
             "type": "main",
             "index": 0
           }
@@ -440,7 +860,105 @@
       "main": [
         [
           {
-            "node": "Send a text message",
+            "node": "Call 'avisar restaurante'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Buscar pedido",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar restaurante": {
+      "main": [
+        [
+          {
+            "node": "Hash del token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar pedido": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar pedido": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Token valido": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hash del token": {
+      "main": [
+        [
+          {
+            "node": "Token valido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'avisar restaurante'": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call 'avisar restaurante'1",
             "type": "main",
             "index": 0
           }
@@ -457,7 +975,7 @@
     "callerPolicy": "workflowsFromSameOwner",
     "availableInMCP": false
   },
-  "versionId": "ae2da66d-3c53-4426-99ac-ee56507d8489",
+  "versionId": "e3e12f32-9442-4cf9-aca9-afeb24ad7e28",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "4f828efc9f971b36ba95aa9a3e5fdc9cc7913557478e19eb3e5e0dd24017f949"
